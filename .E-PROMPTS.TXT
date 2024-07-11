@@ -1,0 +1,65 @@
+import React, { useState, useEffect } from 'react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const ChatComponent = () => {
+  const [messages, setMessages] = useState([
+    { role: 'user', text: 'Hello, I have 2 dogs in my house.' },
+    { role: 'model', text: 'Great to meet you. What would you like to know?' }
+  ]);
+  const [input, setInput] = useState('');
+  const [chat, setChat] = useState(null);
+  const genAI = new GoogleGenerativeAI('AIzaSyB1FU0rO6DvfxQlyy8JD4mQLP4JHUo9Klo');
+
+  useEffect(() => {
+    const initChat = async () => {
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const initialChat = model.startChat({
+        history: messages.map(msg => ({
+          role: msg.role,
+          parts: [{ text: msg.text }]
+        })),
+        generationConfig: {
+          maxOutputTokens: 100
+        }
+      });
+      setChat(initialChat);
+    };
+    initChat();
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (chat && input) {
+      const newMessages = [...messages, { role: 'user', text: input }];
+      setMessages(newMessages);
+
+      const result = await chat.sendMessage(input);
+      const response = await result.response;
+      const text = response.text();
+
+      setMessages([...newMessages, { role: 'model', text }]);
+      setInput('');
+    }
+  };
+
+  return (
+    <div>
+      <div>
+        {messages.map((msg, index) => (
+          <div key={index} className={msg.role}>
+            {msg.role}: {msg.text}
+          </div>
+        ))}
+      </div>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <button onClick={handleSendMessage}>Send</button>
+    </div>
+  );
+};
+
+export default ChatComponent;
+modify the same code but use another file server.js for backend anduse express and cors in that keep the code same
